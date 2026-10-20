@@ -156,22 +156,28 @@ function aplicar(){
   holder.style.transform="translate("+tx+"px,"+ty+"px) scale("+esc_+")";
   var z=document.getElementById("zlabel"); if(z) z.textContent=Math.round(esc_*100)+"%";
 }
+// el holder ya viene centrado por el flex: su origen esta corrido (ox,oy) respecto del escenario,
+// y tx/ty viven en el marco del holder. Todo se calcula en ese marco.
+function offs(){
+  var S=document.querySelector(".stage").getBoundingClientRect();
+  return {S:S, ox:(S.width-img.clientWidth)/2, oy:(S.height-img.clientHeight)/2};
+}
 function zoomEn(cx, cy, factor){
   var nuevo=Math.max(1, Math.min(12, esc_*factor));
   if(nuevo===esc_) return;
-  var st_=document.querySelector(".stage").getBoundingClientRect();
-  var px=cx-st_.left, py=cy-st_.top;                 // punto fijo en coords del escenario
+  var o=offs();
+  var px=(cx-o.S.left)-o.ox, py=(cy-o.S.top)-o.oy;   // punto fijo, en coords del holder
   tx = px - (px-tx)*(nuevo/esc_);
   ty = py - (py-ty)*(nuevo/esc_);
   esc_=nuevo; limitar(); aplicar();
 }
 function limitar(){
   if(esc_<=1){ tx=0; ty=0; return; }
-  var st_=document.querySelector(".stage").getBoundingClientRect();
-  var w=img.clientWidth*esc_, h=img.clientHeight*esc_;
-  var ox=(st_.width-img.clientWidth)/2, oy=(st_.height-img.clientHeight)/2;
-  tx=Math.min(ox, Math.max(st_.width-ox-w, tx));
-  ty=Math.min(oy, Math.max(st_.height-oy-h, ty));
+  var o=offs(), w=img.clientWidth*esc_, h=img.clientHeight*esc_;
+  if(w<=o.S.width) tx=-o.ox+(o.S.width-w)/2;
+  else tx=Math.min(-o.ox, Math.max(-o.ox+o.S.width-w, tx));
+  if(h<=o.S.height) ty=-o.oy+(o.S.height-h)/2;
+  else ty=Math.min(-o.oy, Math.max(-o.oy+o.S.height-h, ty));
 }
 document.querySelector(".stage").addEventListener("wheel",function(e){
   e.preventDefault();
