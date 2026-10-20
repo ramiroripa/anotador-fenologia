@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cajas de minas - Cucurbitaceae</title><style>
+:root{--bg:#13171b;--panel:#1b2127;--p2:#222a31;--line:#2c353d;--tx:#dfe6ec;--faint:#8b99a6;--ac:#5bb5d0;--ok:#4caf7d;--warn:#d08a3a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:14px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+header{display:flex;align-items:center;gap:14px;padding:10px 16px;background:var(--panel);border-bottom:1px solid var(--line)}
+.t{font-weight:600}
+.barwrap{flex:1}.bar{height:6px;background:var(--p2);border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);width:0}
+button{background:var(--p2);color:var(--tx);border:1px solid var(--line);border-radius:7px;padding:7px 12px;cursor:pointer;font-size:13px}
+button:hover{border-color:var(--ac)}
+button.primary{background:var(--ac);color:#0d1216;border-color:transparent;font-weight:600}
+button.warn{border-color:var(--warn);color:var(--warn)}
+main{display:flex;height:calc(100vh - 47px)}
+.stage{flex:1;position:relative;display:flex;align-items:center;justify-content:center;background:#0d1114;overflow:hidden}
+.holder{position:relative;line-height:0}
+#photo{max-width:100%;max-height:calc(100vh - 67px);display:block}
+#cv{position:absolute;left:0;top:0;cursor:crosshair}
+.imgstate{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--faint)}
+.side{width:300px;background:var(--panel);border-left:1px solid var(--line);padding:14px;display:flex;flex-direction:column;gap:10px;overflow:auto}
+.meta{font-size:12.5px;color:var(--faint)}
+.q{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint);margin-top:6px}
+.cajas{font-size:12.5px}
+.cajas div{padding:3px 0;border-bottom:1px solid var(--line);display:flex;justify-content:space-between}
+.hint{font-size:11.5px;color:var(--faint);line-height:1.5}
+.spacer{flex:1}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:11px;background:var(--p2);color:var(--faint)}
+.badge.ok{background:rgba(76,175,125,.18);color:var(--ok)}
+.badge.warn{background:rgba(208,138,58,.18);color:var(--warn)}
+</style></head><body>
+<header>
+  <div class="t">Cajas de minas - Cucurbitaceae</div>
+  <div class="barwrap"><div class="bar"><i id="bar"></i></div></div>
+  <div class="meta"><span id="pos">0 / 0</span> &middot; cajas: <b id="ncaj">0</b> &middot; sin mina: <b id="nsin">0</b></div>
+  <button class="primary" onclick="DL()">Descargar CSV</button>
+</header>
+<main>
+  <div class="stage">
+    <div class="holder" id="holder">
+      <img id="photo" alt="">
+      <canvas id="cv"></canvas>
+    </div>
+    <div class="imgstate" id="imgstate">cargando...</div>
+  </div>
+  <aside class="side">
+    <div class="meta" id="meta"></div>
+    <div><span class="badge" id="estado">sin marcar</span></div>
+    <div class="q">cajas en esta foto</div>
+    <div class="cajas" id="lista"></div>
+    <button onclick="DESHACER()">Deshacer ultima caja (z)</button>
+    <button onclick="LIMPIAR()">Borrar todas</button>
+    <button class="warn" onclick="SINMINA()">No encuentro la mina (x)</button>
+    <div class="q">notas</div>
+    <input id="notas" style="width:100%;background:var(--p2);color:var(--tx);border:1px solid var(--line);border-radius:7px;padding:7px" placeholder="opcional" oninput="NOTA(this.value)">
+    <div class="spacer"></div>
+    <div style="display:flex;gap:8px">
+      <button onclick="NAV(-1)">&larr;</button>
+      <button class="primary" style="flex:1" onclick="NAV(1)">Siguiente &rarr;</button>
+    </div>
+    <div class="hint">Arrastrar sobre la foto para encerrar <b>cada</b> galeria. Si hay varias minas, una caja por mina. Encerrar la galeria entera, ajustada, sin media hoja de sobra.<br><br>
+    <b>z</b> deshacer &middot; <b>x</b> no encuentro la mina &middot; <b>&larr; &rarr;</b> moverse<br><br>
+    Las coordenadas se guardan relativas al tamano de la foto, asi que sirven sobre el original.</div>
+  </aside>
+</main>
+<script>
+(function(){
+var R=[{"image_file": "107182817_180219186.jpg", "observation_id": 107182817, "photo_id": 180219186, "image_url": "img_minas82/180219186.jpg", "obs": "https://www.inaturalist.org/observations/107182817", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "108467826_182627022.jpg", "observation_id": 108467826, "photo_id": 182627022, "image_url": "img_minas82/182627022.jpg", "obs": "https://www.inaturalist.org/observations/108467826", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "115833149_195494605.jpg", "observation_id": 115833149, "photo_id": 195494605, "image_url": "img_minas82/195494605.jpg", "obs": "https://www.inaturalist.org/observations/115833149", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "119817095_202589122.jpg", "observation_id": 119817095, "photo_id": 202589122, "image_url": "img_minas82/202589122.jpg", "obs": "https://www.inaturalist.org/observations/119817095", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "121380879_205393816.jpg", "observation_id": 121380879, "photo_id": 205393816, "image_url": "img_minas82/205393816.jpg", "obs": "https://www.inaturalist.org/observations/121380879", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "121382333_205396577.jpg", "observation_id": 121382333, "photo_id": 205396577, "image_url": "img_minas82/205396577.jpg", "obs": "https://www.inaturalist.org/observations/121382333", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "129830670_220690905.jpg", "observation_id": 129830670, "photo_id": 220690905, "image_url": "img_minas82/220690905.jpg", "obs": "https://www.inaturalist.org/observations/129830670", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "137456812_234765836.jpg", "observation_id": 137456812, "photo_id": 234765836, "image_url": "img_minas82/234765836.jpg", "obs": "https://www.inaturalist.org/observations/137456812", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "144871335_248742903.jpg", "observation_id": 144871335, "photo_id": 248742903, "image_url": "img_minas82/248742903.jpg", "obs": "https://www.inaturalist.org/observations/144871335", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "148027148_254831292.jpg", "observation_id": 148027148, "photo_id": 254831292, "image_url": "img_minas82/254831292.jpg", "obs": "https://www.inaturalist.org/observations/148027148", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "148027148_254831293.jpg", "observation_id": 148027148, "photo_id": 254831293, "image_url": "img_minas82/254831293.jpg", "obs": "https://www.inaturalist.org/observations/148027148", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "148280968_255315841.jpg", "observation_id": 148280968, "photo_id": 255315841, "image_url": "img_minas82/255315841.jpg", "obs": "https://www.inaturalist.org/observations/148280968", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "156780090_271149138.jpg", "observation_id": 156780090, "photo_id": 271149138, "image_url": "img_minas82/271149138.jpg", "obs": "https://www.inaturalist.org/observations/156780090", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "156933136_271405622.jpg", "observation_id": 156933136, "photo_id": 271405622, "image_url": "img_minas82/271405622.jpg", "obs": "https://www.inaturalist.org/observations/156933136", "host_species": "Cucurbita foetidissima", "country": "US", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "157983420_273091935.jpg", "observation_id": 157983420, "photo_id": 273091935, "image_url": "img_minas82/273091935.jpg", "obs": "https://www.inaturalist.org/observations/157983420", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "158332262_273650221.jpg", "observation_id": 158332262, "photo_id": 273650221, "image_url": "img_minas82/273650221.jpg", "obs": "https://www.inaturalist.org/observations/158332262", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "172873944_300156475.jpg", "observation_id": 172873944, "photo_id": 300156475, "image_url": "img_minas82/300156475.jpg", "obs": "https://www.inaturalist.org/observations/172873944", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "176331948_306549522.jpg", "observation_id": 176331948, "photo_id": 306549522, "image_url": "img_minas82/306549522.jpg", "obs": "https://www.inaturalist.org/observations/176331948", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "179738745_312967062.jpg", "observation_id": 179738745, "photo_id": 312967062, "image_url": "img_minas82/312967062.jpg", "obs": "https://www.inaturalist.org/observations/179738745", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "188032537_328974283.jpg", "observation_id": 188032537, "photo_id": 328974283, "image_url": "img_minas82/328974283.jpg", "obs": "https://www.inaturalist.org/observations/188032537", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "191051226_335061695.jpg", "observation_id": 191051226, "photo_id": 335061695, "image_url": "img_minas82/335061695.jpg", "obs": "https://www.inaturalist.org/observations/191051226", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "192153849_337262974.jpg", "observation_id": 192153849, "photo_id": 337262974, "image_url": "img_minas82/337262974.jpg", "obs": "https://www.inaturalist.org/observations/192153849", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "197522283_347913912.jpg", "observation_id": 197522283, "photo_id": 347913912, "image_url": "img_minas82/347913912.jpg", "obs": "https://www.inaturalist.org/observations/197522283", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "208342582_368627538.jpg", "observation_id": 208342582, "photo_id": 368627538, "image_url": "img_minas82/368627538.jpg", "obs": "https://www.inaturalist.org/observations/208342582", "host_species": "Sicyos mawhai", "country": "NZ", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "212468713_375471784.jpg", "observation_id": 212468713, "photo_id": 375471784, "image_url": "img_minas82/375471784.jpg", "obs": "https://www.inaturalist.org/observations/212468713", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "212969463_376357679.jpg", "observation_id": 212969463, "photo_id": 376357679, "image_url": "img_minas82/376357679.jpg", "obs": "https://www.inaturalist.org/observations/212969463", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "215477199_380967136.jpg", "observation_id": 215477199, "photo_id": 380967136, "image_url": "img_minas82/380967136.jpg", "obs": "https://www.inaturalist.org/observations/215477199", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "218636482_386908828.jpg", "observation_id": 218636482, "photo_id": 386908828, "image_url": "img_minas82/386908828.jpg", "obs": "https://www.inaturalist.org/observations/218636482", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "223426843_395883002.jpg", "observation_id": 223426843, "photo_id": 395883002, "image_url": "img_minas82/395883002.jpg", "obs": "https://www.inaturalist.org/observations/223426843", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "237676131_423014537.jpg", "observation_id": 237676131, "photo_id": 423014537, "image_url": "img_minas82/423014537.jpg", "obs": "https://www.inaturalist.org/observations/237676131", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "239616308_431570238.jpg", "observation_id": 239616308, "photo_id": 431570238, "image_url": "img_minas82/431570238.jpg", "obs": "https://www.inaturalist.org/observations/239616308", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "248368296_443761411.jpg", "observation_id": 248368296, "photo_id": 443761411, "image_url": "img_minas82/443761411.jpg", "obs": "https://www.inaturalist.org/observations/248368296", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "251136522_449300470.jpg", "observation_id": 251136522, "photo_id": 449300470, "image_url": "img_minas82/449300470.jpg", "obs": "https://www.inaturalist.org/observations/251136522", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "251770443_450559028.jpg", "observation_id": 251770443, "photo_id": 450559028, "image_url": "img_minas82/450559028.jpg", "obs": "https://www.inaturalist.org/observations/251770443", "host_species": "Trichosanthes cucumeroides", "country": "JP", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "256702512_460316743.jpg", "observation_id": 256702512, "photo_id": 460316743, "image_url": "img_minas82/460316743.jpg", "obs": "https://www.inaturalist.org/observations/256702512", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "257090212_461113854.jpg", "observation_id": 257090212, "photo_id": 461113854, "image_url": "img_minas82/461113854.jpg", "obs": "https://www.inaturalist.org/observations/257090212", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "260716880_468254108.jpg", "observation_id": 260716880, "photo_id": 468254108, "image_url": "img_minas82/468254108.jpg", "obs": "https://www.inaturalist.org/observations/260716880", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "266090657_478058045.jpg", "observation_id": 266090657, "photo_id": 478058045, "image_url": "img_minas82/478058045.jpg", "obs": "https://www.inaturalist.org/observations/266090657", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "266090657_478058047.jpg", "observation_id": 266090657, "photo_id": 478058047, "image_url": "img_minas82/478058047.jpg", "obs": "https://www.inaturalist.org/observations/266090657", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "266090657_478058049.jpg", "observation_id": 266090657, "photo_id": 478058049, "image_url": "img_minas82/478058049.jpg", "obs": "https://www.inaturalist.org/observations/266090657", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "273874519_492468533.jpg", "observation_id": 273874519, "photo_id": 492468533, "image_url": "img_minas82/492468533.jpg", "obs": "https://www.inaturalist.org/observations/273874519", "host_species": "Marah macrocarpa", "country": "US", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "273874519_492468593.jpg", "observation_id": 273874519, "photo_id": 492468593, "image_url": "img_minas82/492468593.jpg", "obs": "https://www.inaturalist.org/observations/273874519", "host_species": "Marah macrocarpa", "country": "US", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "274388757_493286367.jpg", "observation_id": 274388757, "photo_id": 493286367, "image_url": "img_minas82/493286367.jpg", "obs": "https://www.inaturalist.org/observations/274388757", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "28337210_44165711.jpg", "observation_id": 28337210, "photo_id": 44165711, "image_url": "img_minas82/44165711.jpg", "obs": "https://www.inaturalist.org/observations/28337210", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "287471178_516894847.jpg", "observation_id": 287471178, "photo_id": 516894847, "image_url": "img_minas82/516894847.jpg", "obs": "https://www.inaturalist.org/observations/287471178", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "287471178_516894865.jpg", "observation_id": 287471178, "photo_id": 516894865, "image_url": "img_minas82/516894865.jpg", "obs": "https://www.inaturalist.org/observations/287471178", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "299682858_539913015.jpg", "observation_id": 299682858, "photo_id": 539913015, "image_url": "img_minas82/539913015.jpg", "obs": "https://www.inaturalist.org/observations/299682858", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "299682858_539926811.jpg", "observation_id": 299682858, "photo_id": 539926811, "image_url": "img_minas82/539926811.jpg", "obs": "https://www.inaturalist.org/observations/299682858", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "299682858_539926845.jpg", "observation_id": 299682858, "photo_id": 539926845, "image_url": "img_minas82/539926845.jpg", "obs": "https://www.inaturalist.org/observations/299682858", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "299682858_539926889.jpg", "observation_id": 299682858, "photo_id": 539926889, "image_url": "img_minas82/539926889.jpg", "obs": "https://www.inaturalist.org/observations/299682858", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "301209370_542762346.jpg", "observation_id": 301209370, "photo_id": 542762346, "image_url": "img_minas82/542762346.jpg", "obs": "https://www.inaturalist.org/observations/301209370", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "304259687_548475303.jpg", "observation_id": 304259687, "photo_id": 548475303, "image_url": "img_minas82/548475303.jpg", "obs": "https://www.inaturalist.org/observations/304259687", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "309803046_559084541.jpg", "observation_id": 309803046, "photo_id": 559084541, "image_url": "img_minas82/559084541.jpg", "obs": "https://www.inaturalist.org/observations/309803046", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "30995308_48464461.jpg", "observation_id": 30995308, "photo_id": 48464461, "image_url": "img_minas82/48464461.jpg", "obs": "https://www.inaturalist.org/observations/30995308", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "311704365_562701362.jpg", "observation_id": 311704365, "photo_id": 562701362, "image_url": "img_minas82/562701362.jpg", "obs": "https://www.inaturalist.org/observations/311704365", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "319472730_577500856.jpg", "observation_id": 319472730, "photo_id": 577500856, "image_url": "img_minas82/577500856.jpg", "obs": "https://www.inaturalist.org/observations/319472730", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "322830189_584072492.jpg", "observation_id": 322830189, "photo_id": 584072492, "image_url": "img_minas82/584072492.jpg", "obs": "https://www.inaturalist.org/observations/322830189", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "326617648_591575336.jpg", "observation_id": 326617648, "photo_id": 591575336, "image_url": "img_minas82/591575336.jpg", "obs": "https://www.inaturalist.org/observations/326617648", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "329400411_597090654.jpg", "observation_id": 329400411, "photo_id": 597090654, "image_url": "img_minas82/597090654.jpg", "obs": "https://www.inaturalist.org/observations/329400411", "host_species": "Cucumis melo", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "337647405_613851099.jpg", "observation_id": 337647405, "photo_id": 613851099, "image_url": "img_minas82/613851099.jpg", "obs": "https://www.inaturalist.org/observations/337647405", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "357005390_651088568.jpg", "observation_id": 357005390, "photo_id": 651088568, "image_url": "img_minas82/651088568.jpg", "obs": "https://www.inaturalist.org/observations/357005390", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "368404463_672869131.jpg", "observation_id": 368404463, "photo_id": 672869131, "image_url": "img_minas82/672869131.jpg", "obs": "https://www.inaturalist.org/observations/368404463", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "368821443_673666170.jpg", "observation_id": 368821443, "photo_id": 673666170, "image_url": "img_minas82/673666170.jpg", "obs": "https://www.inaturalist.org/observations/368821443", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "391041224_716479266.jpg", "observation_id": 391041224, "photo_id": 716479266, "image_url": "img_minas82/716479266.jpg", "obs": "https://www.inaturalist.org/observations/391041224", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "39379476_62465304.jpg", "observation_id": 39379476, "photo_id": 62465304, "image_url": "img_minas82/62465304.jpg", "obs": "https://www.inaturalist.org/observations/39379476", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "46197011_73269252.jpg", "observation_id": 46197011, "photo_id": 73269252, "image_url": "img_minas82/73269252.jpg", "obs": "https://www.inaturalist.org/observations/46197011", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "54042668_85973022.jpg", "observation_id": 54042668, "photo_id": 85973022, "image_url": "img_minas82/85973022.jpg", "obs": "https://www.inaturalist.org/observations/54042668", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "56452680_90084902.jpg", "observation_id": 56452680, "photo_id": 90084902, "image_url": "img_minas82/90084902.jpg", "obs": "https://www.inaturalist.org/observations/56452680", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "60258559_96335632.jpg", "observation_id": 60258559, "photo_id": 96335632, "image_url": "img_minas82/96335632.jpg", "obs": "https://www.inaturalist.org/observations/60258559", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "62964935_100975571.jpg", "observation_id": 62964935, "photo_id": 100975571, "image_url": "img_minas82/100975571.jpg", "obs": "https://www.inaturalist.org/observations/62964935", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "63859483_102563197.jpg", "observation_id": 63859483, "photo_id": 102563197, "image_url": "img_minas82/102563197.jpg", "obs": "https://www.inaturalist.org/observations/63859483", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "64166582_103116927.jpg", "observation_id": 64166582, "photo_id": 103116927, "image_url": "img_minas82/103116927.jpg", "obs": "https://www.inaturalist.org/observations/64166582", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "68250455_110460849.jpg", "observation_id": 68250455, "photo_id": 110460849, "image_url": "img_minas82/110460849.jpg", "obs": "https://www.inaturalist.org/observations/68250455", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "7254010_9371848.jpg", "observation_id": 7254010, "photo_id": 9371848, "image_url": "img_minas82/9371848.jpg", "obs": "https://www.inaturalist.org/observations/7254010", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "77388987_126559021.jpg", "observation_id": 77388987, "photo_id": 126559021, "image_url": "img_minas82/126559021.jpg", "obs": "https://www.inaturalist.org/observations/77388987", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "86232535_142024879.jpg", "observation_id": 86232535, "photo_id": 142024879, "image_url": "img_minas82/142024879.jpg", "obs": "https://www.inaturalist.org/observations/86232535", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "93495677_154967530.jpg", "observation_id": 93495677, "photo_id": 154967530, "image_url": "img_minas82/154967530.jpg", "obs": "https://www.inaturalist.org/observations/93495677", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "94656383_157046121.jpg", "observation_id": 94656383, "photo_id": 157046121, "image_url": "img_minas82/157046121.jpg", "obs": "https://www.inaturalist.org/observations/94656383", "host_species": "Cucurbita foetidissima", "country": "US", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "95585194_158702469.jpg", "observation_id": 95585194, "photo_id": 158702469, "image_url": "img_minas82/158702469.jpg", "obs": "https://www.inaturalist.org/observations/95585194", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "95585194_158702529.jpg", "observation_id": 95585194, "photo_id": 158702529, "image_url": "img_minas82/158702529.jpg", "obs": "https://www.inaturalist.org/observations/95585194", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "95630385_158780848.jpg", "observation_id": 95630385, "photo_id": 158780848, "image_url": "img_minas82/158780848.jpg", "obs": "https://www.inaturalist.org/observations/95630385", "host_species": "", "country": "", "cajas": [], "sin_mina": 0, "notas": ""}, {"image_file": "99340209_165578252.jpg", "observation_id": 99340209, "photo_id": 165578252, "image_url": "img_minas82/165578252.jpg", "obs": "https://www.inaturalist.org/observations/99340209", "host_species": "Trichosanthes cucumeroides", "country": "TW", "cajas": [], "sin_mina": 0, "notas": ""}];
+var i=0;
+var img=document.getElementById("photo"), cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+var st=document.getElementById("imgstate"), holder=document.getElementById("holder");
+var dibujando=false, x0=0, y0=0, x1=0, y1=0;
+function $(s){return document.querySelector(s)}
+function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]})}
+function ajustar(){
+  cv.width=img.clientWidth; cv.height=img.clientHeight;
+  cv.style.width=img.clientWidth+"px"; cv.style.height=img.clientHeight+"px";
+  pintar();
+}
+function pintar(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  var r=R[i]; if(!r) return;
+  (r.cajas||[]).forEach(function(b,k){
+    var X=b[0]*cv.width, Y=b[1]*cv.height, W=(b[2]-b[0])*cv.width, H=(b[3]-b[1])*cv.height;
+    ctx.strokeStyle="#5bb5d0"; ctx.lineWidth=2; ctx.strokeRect(X,Y,W,H);
+    ctx.fillStyle="rgba(91,181,208,.15)"; ctx.fillRect(X,Y,W,H);
+    ctx.fillStyle="#5bb5d0"; ctx.font="12px system-ui"; ctx.fillText(k+1, X+4, Y+14);
+  });
+  if(dibujando){
+    ctx.strokeStyle="#d08a3a"; ctx.lineWidth=2;
+    ctx.strokeRect(Math.min(x0,x1),Math.min(y0,y1),Math.abs(x1-x0),Math.abs(y1-y0));
+  }
+}
+cv.addEventListener("mousedown",function(e){
+  var b=cv.getBoundingClientRect(); x0=e.clientX-b.left; y0=e.clientY-b.top; x1=x0; y1=y0; dibujando=true;
+});
+cv.addEventListener("mousemove",function(e){
+  if(!dibujando) return;
+  var b=cv.getBoundingClientRect(); x1=e.clientX-b.left; y1=e.clientY-b.top; pintar();
+});
+window.addEventListener("mouseup",function(){
+  if(!dibujando) return; dibujando=false;
+  var w=Math.abs(x1-x0), h=Math.abs(y1-y0);
+  if(w>6 && h>6){
+    var r=R[i]; r.cajas=r.cajas||[];
+    r.cajas.push([Math.min(x0,x1)/cv.width, Math.min(y0,y1)/cv.height,
+                  Math.max(x0,x1)/cv.width, Math.max(y0,y1)/cv.height].map(function(v){return Math.max(0,Math.min(1,v))}));
+    r.sin_mina=0;
+  }
+  render();
+});
+function render(){
+  var r=R[i]; if(!r) return;
+  st.style.display="none"; holder.style.display="block";
+  if(img.getAttribute("src")!==r.image_url){
+    holder.style.display="none"; st.style.display="flex"; st.textContent="cargando...";
+    img.onload=function(){holder.style.display="block"; st.style.display="none"; ajustar()};
+    img.onerror=function(){st.textContent="\u26a0 foto no disponible"; st.style.display="flex"};
+    img.src=r.image_url;
+  } else { ajustar(); }
+  $("#meta").innerHTML="<b>"+esc(r.host_species||"?")+"</b> &middot; "+esc(r.country||"")+" &middot; <a href=\""+esc(r.obs)+"\" target=\"_blank\" style=\"color:var(--ac)\">iNaturalist</a>";
+  var n=(r.cajas||[]).length;
+  var e=$("#estado");
+  if(r.sin_mina){ e.className="badge warn"; e.textContent="marcada: no encuentro la mina"; }
+  else if(n){ e.className="badge ok"; e.textContent=n+(n==1?" caja":" cajas"); }
+  else { e.className="badge"; e.textContent="sin marcar"; }
+  $("#lista").innerHTML=(r.cajas||[]).map(function(b,k){
+    return "<div><span>caja "+(k+1)+"</span><span>"+(100*(b[2]-b[0])).toFixed(0)+"% x "+(100*(b[3]-b[1])).toFixed(0)+"%</span></div>";
+  }).join("")||"<div style='color:var(--faint);border:0'>ninguna</div>";
+  $("#notas").value=r.notas||"";
+  var con=R.filter(function(z){return (z.cajas&&z.cajas.length)||z.sin_mina}).length;
+  $("#bar").style.width=(con/R.length*100)+"%";
+  $("#pos").textContent=(i+1)+" / "+R.length;
+  $("#ncaj").textContent=R.reduce(function(a,z){return a+((z.cajas||[]).length)},0);
+  $("#nsin").textContent=R.filter(function(z){return z.sin_mina}).length;
+  pintar();
+}
+window.addEventListener("resize",ajustar);
+window.NAV=function(d){ i=Math.max(0,Math.min(R.length-1,i+d)); render(); };
+window.DESHACER=function(){ var r=R[i]; if(r.cajas&&r.cajas.length){r.cajas.pop(); render();} };
+window.LIMPIAR=function(){ R[i].cajas=[]; R[i].sin_mina=0; render(); };
+window.SINMINA=function(){ R[i].cajas=[]; R[i].sin_mina=1; render(); };
+window.NOTA=function(v){ R[i].notas=v; };
+document.addEventListener("keydown",function(e){
+  if(e.target.tagName==="INPUT") return;
+  if(e.key==="ArrowRight") NAV(1);
+  else if(e.key==="ArrowLeft") NAV(-1);
+  else if(e.key==="z") DESHACER();
+  else if(e.key==="x") SINMINA();
+});
+window.DL=function(){
+  var o=["image_file,observation_id,photo_id,caja_idx,x0,y0,x1,y1,sin_mina,notas"];
+  R.forEach(function(r){
+    var nt='"'+String(r.notas||"").replace(/"/g,'""')+'"';
+    if(r.sin_mina){ o.push([r.image_file,r.observation_id,r.photo_id,"","","","","",1,nt].join(",")); return; }
+    if(!r.cajas||!r.cajas.length){ o.push([r.image_file,r.observation_id,r.photo_id,"","","","","",0,nt].join(",")); return; }
+    r.cajas.forEach(function(b,k){
+      o.push([r.image_file,r.observation_id,r.photo_id,k+1,b[0].toFixed(5),b[1].toFixed(5),b[2].toFixed(5),b[3].toFixed(5),0,nt].join(","));
+    });
+  });
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(new Blob([o.join("\n")],{type:"text/csv"}));
+  a.download="cajas_minas.csv"; a.click();
+};
+render();
+})();
+</script>
+</body></html>
