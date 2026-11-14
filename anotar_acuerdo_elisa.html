@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111418">
+<title>Phenophases – Elisa (agreement set)</title>
+<style>
+  :root{--bg:#111418;--panel:#1a1f26;--line:#2b323c;--txt:#e8ecf1;--dim:#9aa5b1;
+    --flower:#55A868;--fruit:#4C72B0;--bud:#DD8452;--vegetative:#8C8C8C;--senescent:#B07AA1;
+    --sb:env(safe-area-inset-bottom,0px)}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+    font:15px/1.35 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;user-select:none}
+  #app{display:flex;flex-direction:column;height:100%}
+  #top{flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--panel);border-bottom:1px solid var(--line)}
+  #prog{flex:1 1 auto;height:6px;background:#0d1014;border-radius:3px;overflow:hidden}
+  #bar{height:100%;width:0;background:linear-gradient(90deg,#4C72B0,#55A868)}
+  #cnt{font-variant-numeric:tabular-nums;font-size:13px;color:var(--dim)}
+  #rate{font-size:11px;color:var(--dim)}
+  .ico{background:none;border:1px solid var(--line);color:var(--txt);border-radius:8px;padding:6px 9px;font-size:13px}
+  #stage{flex:1 1 auto;position:relative;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;touch-action:none}
+  #img{max-width:100%;max-height:100%;object-fit:contain;display:block;transform-origin:0 0}
+  #meta{position:absolute;left:0;right:0;top:0;padding:6px 10px;font-size:12px;color:#dfe6ee;
+    background:linear-gradient(180deg,rgba(0,0,0,.75),rgba(0,0,0,0));pointer-events:none}
+  #meta i{color:#b9c6d4;font-style:normal}
+  #zl{position:absolute;right:8px;bottom:8px;font-size:11px;color:#cfd8e3;background:rgba(0,0,0,.55);
+    padding:3px 7px;border-radius:8px;display:none}
+  #spin{position:absolute;width:26px;height:26px;border:3px solid #2b323c;border-top-color:#8fb3e0;border-radius:50%;
+    animation:sp .8s linear infinite;display:none}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  #fin{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+    gap:12px;background:#0d1014;padding:24px;text-align:center}
+  #chips{flex:0 0 auto;display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:8px 8px 0}
+  .chip{appearance:none;border:2px solid var(--line);background:#161b22;color:var(--txt);border-radius:12px;
+    padding:14px 4px;font-size:15px;font-weight:600;display:flex;flex-direction:column;align-items:center;gap:2px}
+  .chip small{font-size:10px;font-weight:400;color:var(--dim)}
+  .chip.on{color:#0b0d10}.chip.on small{color:rgba(0,0,0,.6)}
+  .chip[data-c=flower].on{background:var(--flower);border-color:var(--flower)}
+  .chip[data-c=fruit].on{background:var(--fruit);border-color:var(--fruit);color:#fff}
+  .chip[data-c=fruit].on small{color:rgba(255,255,255,.75)}
+  .chip[data-c=bud].on{background:var(--bud);border-color:var(--bud)}
+  .chip[data-c=vegetative].on{background:var(--vegetative);border-color:var(--vegetative)}
+  .chip[data-c=senescent].on{background:var(--senescent);border-color:var(--senescent)}
+  #acts{flex:0 0 auto;display:grid;grid-template-columns:52px 52px 1fr 52px;gap:6px;padding:8px 8px calc(8px + var(--sb))}
+  .btn{appearance:none;border:1px solid var(--line);background:#161b22;color:var(--txt);border-radius:12px;
+    padding:15px 0;font-size:15px;font-weight:600}
+  #noev.on{background:#6b2f2f;border-color:#6b2f2f;color:#fff}
+  #next{background:#1f6f43;border-color:#1f6f43;color:#fff;font-size:17px}
+  #next.vacio{background:#2b323c;border-color:#2b323c;color:var(--dim)}
+  #toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(86px + var(--sb));background:#0b0d10;
+    border:1px solid var(--line);padding:9px 14px;border-radius:10px;font-size:13px;opacity:0;transition:opacity .2s;
+    pointer-events:none;z-index:20;max-width:86%;text-align:center}
+  #toast.show{opacity:1}
+  #sal{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;flex-direction:column;align-items:center;
+    justify-content:center;gap:10px;padding:20px;z-index:30}
+  #sal textarea{width:100%;height:42vh;background:#0d1014;color:var(--txt);border:1px solid var(--line);
+    border-radius:10px;font-size:11px;user-select:text}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="top">
+    <button class="ico" id="atras">&#8592;</button>
+    <div id="prog"><div id="bar"></div></div>
+    <div id="cnt">0/0</div><div id="rate"></div>
+    <button class="ico" id="menu">&#8942;</button>
+  </div>
+  <div id="stage">
+    <div id="spin"></div><img id="img" alt=""><div id="meta"></div><div id="zl"></div>
+    <div id="fin"><h2 style="margin:0">Done</h2><p id="fintxt" style="color:#9aa5b1"></p>
+      <button class="btn" id="fdl">Download CSV</button>
+      <button class="btn" id="fcopy">Copy to clipboard</button></div>
+  </div>
+  <div id="chips"></div>
+  <div id="acts">
+    <button class="btn" id="skip" title="unsure, come back later">?</button>
+    <button class="btn" id="noev" title="not assessable">&#10005;</button>
+    <button class="btn" id="next">Next</button>
+    <button class="btn" id="nota">&#9998;</button>
+  </div>
+</div>
+<div id="toast"></div>
+<div id="sal"><p style="color:#9aa5b1;margin:0">Copy everything and paste it into a .csv file</p>
+  <textarea id="saltxt" readonly></textarea><button class="btn" id="salclose">Close</button></div>
+<script>
+(function(){
+"use strict";
+var KIT = "kit_acuerdo_elisa";
+var CLS = ["flower","fruit","bud","vegetative","senescent"];
+var NICE = {flower:"Flower",fruit:"Fruit",bud:"Bud",vegetative:"Vegetative",senescent:"Senescent"};
+var HINT = {flower:"anthesis",fruit:"fruit or seed",bud:"closed bud",
+            vegetative:"no structures",senescent:"dry leaf"};
+var D = [{"i": "3873014627", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/202547181/original.jpg", "s": "Retama sphaerocarpa", "f": "Fabaceae", "d": "5", "v": 1}, {"i": "3881822715", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/218415936/original.jpeg", "s": "Silene latifolia", "f": "Caryophyllaceae", "d": "7", "v": 1}, {"i": "5838205183", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/572075794/original.jpg", "s": "Carpinus betulus", "f": "Betulaceae", "d": "9", "v": 1}, {"i": "3698292417", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/124028668/original.jpeg", "s": "Lamium purpureum", "f": "Lamiaceae", "d": "4", "v": 1}, {"i": "4908680670", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/402429329/original.jpg", "s": "Sedum acre", "f": "Crassulaceae", "d": "7", "v": 1}, {"i": "4121226846", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/280102192/original.jpeg", "s": "Glebionis coronaria", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "3859021524", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/201506930/original.jpeg", "s": "Ajuga reptans", "f": "Lamiaceae", "d": "5", "v": 1}, {"i": "4946537543", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/250848435/original.jpeg", "s": "Crocus vernus", "f": "Iridaceae", "d": "4", "v": 1}, {"i": "4137667994", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/284408140/original.jpeg", "s": "Erodium cicutarium", "f": "Geraniaceae", "d": "5", "v": 1}, {"i": "2350329865", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/47520672/original.jpeg", "s": "Fagus sylvatica", "f": "Fagaceae", "d": "8", "v": 1}, {"i": "4400129414", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/147540426/original.jpg", "s": "Origanum vulgare", "f": "Lamiaceae", "d": "7", "v": 1}, {"i": "2826166132", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/86550519/original.jpeg", "s": "Alcea rosea", "f": "Malvaceae", "d": "7", "v": 1}, {"i": "6234840895", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/644965644/original.jpg", "s": "Plantago lanceolata", "f": "Plantaginaceae", "d": "4", "v": 1}, {"i": "4171975938", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/304559962/original.jpg", "s": "Sedum album", "f": "Crassulaceae", "d": "7", "v": 1}, {"i": "5889314344", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/586096486/original.jpg", "s": "Trifolium incarnatum", "f": "Fabaceae", "d": "5", "v": 1}, {"i": "3712686651", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/181655767/original.jpeg", "s": "Tussilago farfara", "f": "Asteraceae", "d": "3", "v": 1}, {"i": "4029054782", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/204910828/original.jpg", "s": "Leucanthemum vulgare", "f": "Asteraceae", "d": "6", "v": 1}, {"i": "4116083061", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/278695863/original.jpeg", "s": "Lamium purpureum", "f": "Lamiaceae", "d": "5", "v": 1}, {"i": "3963313952", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/241616527/original.jpg", "s": "Aegopodium podagraria", "f": "Apiaceae", "d": "11", "v": 1}, {"i": "4974230344", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/443566526/original.jpeg", "s": "Quercus robur", "f": "Fagaceae", "d": "10", "v": 1}, {"i": "3874012759", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/215472051/original.jpg", "s": "Trifolium hybridum", "f": "Fabaceae", "d": "7", "v": 1}, {"i": "4950277450", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/431212808/original.jpeg", "s": "Polygonum aviculare", "f": "Polygonaceae", "d": "9", "v": 1}, {"i": "6413778387", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/683683089/original.jpg", "s": "Trapa natans", "f": "Lythraceae", "d": "6", "v": 1}, {"i": "4126870620", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/282697414/original.jpg", "s": "Berteroa incana", "f": "Brassicaceae", "d": "5", "v": 1}, {"i": "2611024872", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/69322413/original.jpeg", "s": "Lepidium draba", "f": "Brassicaceae", "d": "4", "v": 1}, {"i": "4945534894", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/427219217/original.jpeg", "s": "Chenopodium album", "f": "Amaranthaceae", "d": "9", "v": 1}, {"i": "4177198256", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/310603051/original.jpg", "s": "Trifolium pratense", "f": "Fabaceae", "d": "8", "v": 1}, {"i": "2294504886", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/45004614/original.jpeg", "s": "Stellaria graminea", "f": "Caryophyllaceae", "d": "7", "v": 1}, {"i": "3307281987", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/136095546/original.jpg", "s": "Glaucium flavum", "f": "Papaveraceae", "d": "6", "v": 1}, {"i": "4522469851", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/295312203/original.jpeg", "s": "Geranium rotundifolium", "f": "Geraniaceae", "d": "6", "v": 1}, {"i": "6195400954", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/630890836/original.jpg", "s": "Lamium purpureum", "f": "Lamiaceae", "d": "3", "v": 1}, {"i": "6236477360", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/646569672/original.jpg", "s": "Bellis perennis", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "4980327000", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/449169080/original.jpg", "s": "Helianthus annuus", "f": "Asteraceae", "d": "11", "v": 1}, {"i": "5920262498", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/598013437/original.jpg", "s": "Humulus lupulus", "f": "Cannabaceae", "d": "11", "v": 1}, {"i": "4145232312", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/295254490/original.jpeg", "s": "Knautia arvensis", "f": "Caprifoliaceae", "d": "6", "v": 1}, {"i": "3314490645", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/137189293/original.jpg", "s": "Populus alba", "f": "Salicaceae", "d": "6", "v": 1}, {"i": "3947069451", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/237321426/original.jpeg", "s": "Hypericum androsaemum", "f": "Hypericaceae", "d": "6", "v": 1}, {"i": "5282143303", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/525708845/original.jpg", "s": "Heracleum mantegazzianum", "f": "Apiaceae", "d": "6", "v": 1}, {"i": "6422348432", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/686068146/original.jpg", "s": "Trifolium repens", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "2634425336", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/74735489/original.jpg", "s": "Corylus avellana", "f": "Betulaceae", "d": "5", "v": 1}, {"i": "3912257998", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/230941127/original.jpeg", "s": "Galium odoratum", "f": "Rubiaceae", "d": "9", "v": 1}, {"i": "3773735118", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/196568186/original.jpeg", "s": "Glechoma hederacea", "f": "Lamiaceae", "d": "5", "v": 1}, {"i": "4946711366", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/430654560/original.jpg", "s": "Cichorium intybus", "f": "Asteraceae", "d": "9", "v": 1}, {"i": "4400254790", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/304550617/original.jpg", "s": "Betula pubescens", "f": "Betulaceae", "d": "7", "v": 1}, {"i": "3881347275", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/218442965/original.jpeg", "s": "Amaranthus retroflexus", "f": "Amaranthaceae", "d": "7", "v": 1}, {"i": "6162864520", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/80247061/original.jpeg", "s": "Tragopogon dubius", "f": "Asteraceae", "d": "6", "v": 1}, {"i": "5838132270", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/571881461/original.jpg", "s": "Matricaria discoidea", "f": "Asteraceae", "d": "5", "v": 1}, {"i": "4138663346", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/292886047/original.jpg", "s": "Rumex thyrsiflorus", "f": "Polygonaceae", "d": "6", "v": 1}, {"i": "5216052761", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/520680111/original.jpg", "s": "Allium vineale", "f": "Amaryllidaceae", "d": "6", "v": 1}, {"i": "4091452701", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/268816054/original.jpg", "s": "Vinca major", "f": "Apocynaceae", "d": "4", "v": 1}, {"i": "2597806817", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/66115157/original.jpeg", "s": "Bellis perennis", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "4945722130", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/429626235/original.jpeg", "s": "Acer campestre", "f": "Sapindaceae", "d": "9", "v": 1}, {"i": "2459998128", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/41252526/original.jpeg", "s": "Artemisia vulgaris", "f": "Asteraceae", "d": "6", "v": 1}, {"i": "5216967913", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/525086331/original.jpg", "s": "Vicia tetrasperma", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "6178692389", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/623649050/original.jpg", "s": "Rhamnus alaternus", "f": "Rhamnaceae", "d": "3", "v": 1}, {"i": "6400026326", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/551055524/original.jpg", "s": "Rhododendron ponticum", "f": "Ericaceae", "d": "8", "v": 1}, {"i": "3902314463", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/224763451/original.jpeg", "s": "Mentha aquatica", "f": "Lamiaceae", "d": "8", "v": 1}, {"i": "3860807992", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/211088462/original.jpg", "s": "Urtica dioica", "f": "Urticaceae", "d": "7", "v": 1}, {"i": "6195599349", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/635365289/original.jpg", "s": "Alyssum alyssoides", "f": "Brassicaceae", "d": "4", "v": 1}, {"i": "6236414738", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/581790184/original.jpg", "s": "Hypochaeris radicata", "f": "Asteraceae", "d": "9", "v": 1}, {"i": "5938247766", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/580705073/original.jpg", "s": "Retama sphaerocarpa", "f": "Fabaceae", "d": "10", "v": 1}, {"i": "6334286827", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/663283387/original.jpg", "s": "Veronica chamaedrys", "f": "Plantaginaceae", "d": "5", "v": 1}, {"i": "5760800978", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/556111605/original.jpg", "s": "Lipandra polysperma", "f": "Amaranthaceae", "d": "8", "v": 1}, {"i": "5168030453", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/505702844/original.jpg", "s": "Sisymbrium loeselii", "f": "Brassicaceae", "d": "5", "v": 1}, {"i": "3325822948", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/140881567/original.jpeg", "s": "Stellaria graminea", "f": "Caryophyllaceae", "d": "7", "v": 1}, {"i": "5230693238", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/540141016/original.jpg", "s": "Atriplex sagittata", "f": "Amaranthaceae", "d": "7", "v": 1}, {"i": "4901745186", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/396536152/original.jpeg", "s": "Euphorbia peplus", "f": "Euphorbiaceae", "d": "6", "v": 1}, {"i": "5086901895", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/132956681/original.jpeg", "s": "Alisma plantago-aquatica", "f": "Alismataceae", "d": "5", "v": 1}, {"i": "5198338079", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/520240489/original.jpg", "s": "Ranunculus repens", "f": "Ranunculaceae", "d": "6", "v": 1}, {"i": "6400679123", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/674674230/original.jpg", "s": "Silene flos-cuculi", "f": "Caryophyllaceae", "d": "6", "v": 1}, {"i": "4872153016", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/386892113/original.jpg", "s": "Sambucus nigra", "f": "Viburnaceae", "d": "5", "v": 1}, {"i": "5006927595", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/433491494/original.jpeg", "s": "Silene latifolia", "f": "Caryophyllaceae", "d": "9", "v": 1}, {"i": "5217218386", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/530198211/original.jpg", "s": "Aconitum variegatum", "f": "Ranunculaceae", "d": "6", "v": 1}, {"i": "6413199973", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/681470638/original.jpg", "s": "Agrostemma githago", "f": "Caryophyllaceae", "d": "6", "v": 1}, {"i": "4952379470", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/384688369/original.jpeg", "s": "Lotus corniculatus", "f": "Fabaceae", "d": "5", "v": 1}, {"i": "6422512687", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/686427225/original.jpg", "s": "Helleborus foetidus", "f": "Ranunculaceae", "d": "6", "v": 1}, {"i": "5154652574", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/499900315/original.jpeg", "s": "Silene gallica", "f": "Caryophyllaceae", "d": "5", "v": 1}, {"i": "3858815078", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/204860207/original.jpeg", "s": "Viola arvensis", "f": "Violaceae", "d": "6", "v": 1}, {"i": "4075839816", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/263302164/original.jpeg", "s": "Tussilago farfara", "f": "Asteraceae", "d": "8", "v": 1}, {"i": "4908172414", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/401012419/original.jpeg", "s": "Calendula officinalis", "f": "Asteraceae", "d": "6", "v": 1}, {"i": "5292525156", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/553955364/original.jpg", "s": "Trifolium pratense", "f": "Fabaceae", "d": "8", "v": 1}, {"i": "3902049876", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/181304520/original.jpg", "s": "Galanthus nivalis", "f": "Amaryllidaceae", "d": "3", "v": 1}, {"i": "3994145457", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/202514566/original.jpeg", "s": "Trifolium pratense", "f": "Fabaceae", "d": "7", "v": 1}, {"i": "5827507243", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/378515781/original.jpg", "s": "Cruciata laevipes", "f": "Rubiaceae", "d": "5", "v": 1}, {"i": "5206417239", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/524448808/original.jpg", "s": "Trifolium campestre", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "2331860487", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/46918893/original.jpeg", "s": "Stellaria graminea", "f": "Caryophyllaceae", "d": "8", "v": 1}, {"i": "3903340889", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/225557301/original.jpeg", "s": "Ligustrum vulgare", "f": "Oleaceae", "d": "6", "v": 1}, {"i": "5830665512", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/500583332/original.jpeg", "s": "Centaurea pullata", "f": "Asteraceae", "d": "5", "v": 1}, {"i": "5198977262", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/520785483/original.jpg", "s": "Impatiens glandulifera", "f": "Balsaminaceae", "d": "6", "v": 1}, {"i": "3320991380", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/139927310/original.jpeg", "s": "Iris pseudacorus", "f": "Iridaceae", "d": "6", "v": 1}, {"i": "3892562333", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/88219200/original.jpg", "s": "Jacobaea vulgaris", "f": "Asteraceae", "d": "8", "v": 1}, {"i": "6399485161", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/673867237/original.jpg", "s": "Silene latifolia", "f": "Caryophyllaceae", "d": "6", "v": 1}, {"i": "6129954652", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/397745178/original.jpg", "s": "Crataegus monogyna", "f": "Rosaceae", "d": "6", "v": 1}, {"i": "3784886487", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/195576268/original.jpeg", "s": "Allium roseum", "f": "Amaryllidaceae", "d": "5", "v": 1}, {"i": "3455795486", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/158453419/original.jpg", "s": "Amaranthus deflexus", "f": "Amaranthaceae", "d": "8", "v": 1}, {"i": "2873923777", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/97253928/original.jpg", "s": "Veronica chamaedrys", "f": "Plantaginaceae", "d": "4", "v": 1}, {"i": "6399035531", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/676413619/original.jpg", "s": "Dianthus deltoides", "f": "Caryophyllaceae", "d": "6", "v": 1}, {"i": "2576286038", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/62587310/original.jpg", "s": "Artemisia vulgaris", "f": "Asteraceae", "d": "8", "v": 1}, {"i": "5932605604", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/491128118/original.jpeg", "s": "Silybum marianum", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "6320910591", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/512034538/original.jpg", "s": "Aquilegia vulgaris", "f": "Ranunculaceae", "d": "5", "v": 1}, {"i": "4054758455", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/211411252/original.jpg", "s": "Heracleum sphondylium", "f": "Apiaceae", "d": "7", "v": 1}, {"i": "5909191993", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/595484230/original.jpg", "s": "Buddleja davidii", "f": "Scrophulariaceae", "d": "11", "v": 1}, {"i": "4993735959", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/455233346/original.jpeg", "s": "Rumex obtusifolius", "f": "Polygonaceae", "d": "12", "v": 1}, {"i": "4993804516", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/446077202/original.jpeg", "s": "Gleditsia triacanthos", "f": "Fabaceae", "d": "5", "v": 1}, {"i": "5216416949", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/529399076/original.jpg", "s": "Plantago lanceolata", "f": "Plantaginaceae", "d": "6", "v": 1}, {"i": "3327944357", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/143230907/original.jpeg", "s": "Stachys palustris", "f": "Lamiaceae", "d": "7", "v": 1}, {"i": "5134434172", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/488835771/original.jpeg", "s": "Taraxacum officinale", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "6352525492", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/669678209/original.jpg", "s": "Sorbus aucuparia", "f": "Rosaceae", "d": "5", "v": 1}, {"i": "4981985031", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/451116993/original.jpeg", "s": "Pittosporum tobira", "f": "Pittosporaceae", "d": "11", "v": 1}, {"i": "2597836292", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/65694230/original.jpg", "s": "Plantago afra", "f": "Plantaginaceae", "d": "4", "v": 1}, {"i": "5231557875", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/539233310/original.jpg", "s": "Chelidonium majus", "f": "Papaveraceae", "d": "7", "v": 1}, {"i": "4921951540", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/198059498/original.jpeg", "s": "Centranthus ruber", "f": "Caprifoliaceae", "d": "5", "v": 1}, {"i": "3384743939", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/157386716/original.jpeg", "s": "Heliotropium europaeum", "f": "Heliotropiaceae", "d": "9", "v": 1}, {"i": "2237524831", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/35711510/original.jpg", "s": "Helleborus foetidus", "f": "Ranunculaceae", "d": "3", "v": 1}, {"i": "6147292364", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/446239068/original.jpeg", "s": "Lapsana communis", "f": "Asteraceae", "d": "10", "v": 1}, {"i": "3858433039", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/202506275/original.jpeg", "s": "Trifolium pratense", "f": "Fabaceae", "d": "5", "v": 1}, {"i": "5134440423", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/488685057/original.jpeg", "s": "Tussilago farfara", "f": "Asteraceae", "d": "4", "v": 1}, {"i": "5167206695", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/505666300/original.jpg", "s": "Salvia glutinosa", "f": "Lamiaceae", "d": "5", "v": 1}, {"i": "2850945365", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/30812646/original.jpg", "s": "Cuscuta europaea", "f": "Convolvulaceae", "d": "8", "v": 1}, {"i": "5140524336", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/492262158/original.jpeg", "s": "Cymbalaria muralis", "f": "Plantaginaceae", "d": "4", "v": 1}, {"i": "3124562992", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/130842973/original.jpg", "s": "Veronica arvensis", "f": "Plantaginaceae", "d": "5", "v": 1}, {"i": "4080984114", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/265921166/original.jpg", "s": "Euphorbia helioscopia", "f": "Euphorbiaceae", "d": "4", "v": 1}, {"i": "3902682024", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/224613380/original.jpg", "s": "Prunus spinosa", "f": "Rosaceae", "d": "7", "v": 1}, {"i": "5840482874", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/545482524/original.jpg", "s": "Quercus rubra", "f": "Fagaceae", "d": "7", "v": 1}, {"i": "5217173979", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/526323829/original.jpg", "s": "Prunella vulgaris", "f": "Lamiaceae", "d": "6", "v": 1}, {"i": "3903451682", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/227044016/original.jpeg", "s": "Amaranthus blitum", "f": "Amaranthaceae", "d": "9", "v": 1}, {"i": "2609246789", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/67738941/original.jpg", "s": "Silene dioica", "f": "Caryophyllaceae", "d": "4", "v": 1}, {"i": "4506482153", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/342115109/original.jpg", "s": "Primula elatior", "f": "Primulaceae", "d": "3", "v": 1}, {"i": "4177421216", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/309387662/original.jpg", "s": "Rosa rugosa", "f": "Rosaceae", "d": "8", "v": 1}, {"i": "4867839622", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/381348926/original.jpeg", "s": "Plantago lanceolata", "f": "Plantaginaceae", "d": "5", "v": 1}, {"i": "4171348134", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/300476507/original.jpeg", "s": "Epilobium hirsutum", "f": "Onagraceae", "d": "7", "v": 1}, {"i": "4892154947", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/391570531/original.jpg", "s": "Cota tinctoria", "f": "Asteraceae", "d": "6", "v": 1}, {"i": "4145353680", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/288589628/original.jpeg", "s": "Cynoglossum officinale", "f": "Boraginaceae", "d": "6", "v": 1}, {"i": "2826471414", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/86824064/original.jpg", "s": "Lonicera caerulea", "f": "Caprifoliaceae", "d": "7", "v": 1}, {"i": "4954771649", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/423716946/original.jpeg", "s": "Cichorium intybus", "f": "Asteraceae", "d": "8", "v": 1}, {"i": "6163366061", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/460669881/original.jpg", "s": "Linaria purpurea", "f": "Plantaginaceae", "d": "12", "v": 1}, {"i": "6413306670", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/523922201/original.jpg", "s": "Filipendula ulmaria", "f": "Rosaceae", "d": "6", "v": 1}, {"i": "3383847470", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/76208317/original.jpeg", "s": "Tanacetum vulgare", "f": "Asteraceae", "d": "5", "v": 1}, {"i": "5133970942", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/487432323/original.jpeg", "s": "Eryngium campestre", "f": "Apiaceae", "d": "6", "v": 1}, {"i": "4046693748", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/257400448/original.jpeg", "s": "Knautia arvensis", "f": "Caprifoliaceae", "d": "11", "v": 1}, {"i": "3307357855", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/135961470/original.jpeg", "s": "Convolvulus arvensis", "f": "Convolvulaceae", "d": "6", "v": 1}, {"i": "3407947596", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/164941270/original.jpg", "s": "Rosa canina", "f": "Rosaceae", "d": "6", "v": 1}, {"i": "4606573202", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/244083607/original.jpeg", "s": "Rubus caesius", "f": "Rosaceae", "d": "8", "v": 1}, {"i": "3873549847", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/212483845/original.jpeg", "s": "Dianthus deltoides", "f": "Caryophyllaceae", "d": "7", "v": 1}, {"i": "4416777689", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/318077254/original.jpeg", "s": "Campanula rapunculoides", "f": "Campanulaceae", "d": "8", "v": 1}, {"i": "4901330677", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/394069714/original.jpeg", "s": "Trifolium pratense", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "4919442450", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/413354767/original.jpeg", "s": "Viburnum opulus", "f": "Viburnaceae", "d": "7", "v": 1}, {"i": "6159213834", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/615153747/original.jpg", "s": "Silene latifolia", "f": "Caryophyllaceae", "d": "12", "v": 1}, {"i": "4525332872", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/352236689/original.jpeg", "s": "Lamium amplexicaule", "f": "Lamiaceae", "d": "2", "v": 1}, {"i": "2294665144", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/45979778/original.jpeg", "s": "Acer pseudoplatanus", "f": "Sapindaceae", "d": "7", "v": 1}, {"i": "5938119089", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/587469899/original.jpg", "s": "Acacia dealbata", "f": "Fabaceae", "d": "11", "v": 1}, {"i": "5177256586", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/514896623/original.jpg", "s": "Urtica dioica", "f": "Urticaceae", "d": "5", "v": 1}, {"i": "3416096760", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/168792269/original.jpg", "s": "Viburnum lantana", "f": "Viburnaceae", "d": "11", "v": 1}, {"i": "3097002946", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/121501428/original.jpg", "s": "Quercus robur", "f": "Fagaceae", "d": "4", "v": 1}, {"i": "4935847843", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/425112044/original.jpeg", "s": "Cymbalaria muralis", "f": "Plantaginaceae", "d": "8", "v": 1}, {"i": "4606931231", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/362598428/original.jpg", "s": "Chelidonium majus", "f": "Papaveraceae", "d": "4", "v": 1}, {"i": "4954361445", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/76123534/original.jpg", "s": "Geranium pyrenaicum", "f": "Geraniaceae", "d": "5", "v": 1}, {"i": "6399671817", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/678882321/original.jpg", "s": "Trifolium repens", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "3858402200", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/204932957/original.jpeg", "s": "Trifolium repens", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "3961458456", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/194311780/original.jpeg", "s": "Veronica chamaedrys", "f": "Plantaginaceae", "d": "5", "v": 1}, {"i": "2331891661", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/47100599/original.jpg", "s": "Cichorium intybus", "f": "Asteraceae", "d": "7", "v": 1}, {"i": "3859756407", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/203467025/original.jpg", "s": "Pentaglottis sempervirens", "f": "Boraginaceae", "d": "6", "v": 1}, {"i": "5892553937", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/522018057/original.jpg", "s": "Rumex patientia", "f": "Polygonaceae", "d": "6", "v": 1}, {"i": "4946399216", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/431031015/original.jpeg", "s": "Lobularia maritima", "f": "Brassicaceae", "d": "9", "v": 1}, {"i": "3333141600", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/145463621/original.jpeg", "s": "Bellis perennis", "f": "Asteraceae", "d": "7", "v": 1}, {"i": "5134487927", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/488938858/original.jpeg", "s": "Chelidonium majus", "f": "Papaveraceae", "d": "4", "v": 1}, {"i": "5889454288", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/574659862/original.jpg", "s": "Centaurium erythraea", "f": "Gentianaceae", "d": "10", "v": 1}, {"i": "4054800337", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/84853009/original.jpeg", "s": "Vicia cracca", "f": "Fabaceae", "d": "7", "v": 1}, {"i": "4519132906", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/348953694/original.jpeg", "s": "Digitalis purpurea", "f": "Plantaginaceae", "d": "5", "v": 1}, {"i": "6353205881", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/642482117/original.jpg", "s": "Populus nigra", "f": "Salicaceae", "d": "4", "v": 1}, {"i": "6188147292", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/632238684/original.jpg", "s": "Erodium cicutarium", "f": "Geraniaceae", "d": "3", "v": 1}, {"i": "3335118549", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/145379064/original.jpeg", "s": "Betula pendula", "f": "Betulaceae", "d": "7", "v": 1}, {"i": "4121109212", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/281712839/original.jpeg", "s": "Solidago virgaurea", "f": "Asteraceae", "d": "5", "v": 1}, {"i": "4596747238", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/301740623/original.jpg", "s": "Quercus rubra", "f": "Fagaceae", "d": "7", "v": 1}, {"i": "2826202238", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/86608508/original.jpeg", "s": "Genista tinctoria", "f": "Fabaceae", "d": "6", "v": 1}, {"i": "4923869692", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/408535479/original.jpeg", "s": "Linaria vulgaris", "f": "Plantaginaceae", "d": "7", "v": 1}, {"i": "5087489797", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/473965810/original.jpeg", "s": "Hedera helix", "f": "Araliaceae", "d": "2", "v": 1}, {"i": "3773020045", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/194052675/original.jpeg", "s": "Iris pseudacorus", "f": "Iridaceae", "d": "4", "v": 1}, {"i": "4134013140", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/289312243/original.jpg", "s": "Acer tataricum", "f": "Sapindaceae", "d": "6", "v": 1}, {"i": "3335206403", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/148547673/original.jpeg", "s": "Clematis vitalba", "f": "Ranunculaceae", "d": "7", "v": 1}, {"i": "4138089599", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/291432980/original.jpg", "s": "Rubus caesius", "f": "Rosaceae", "d": "6", "v": 1}, {"i": "4506239791", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/268955843/original.jpg", "s": "Rumex obtusifolius", "f": "Polygonaceae", "d": "4", "v": 1}, {"i": "5231509367", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/540906163/original.jpg", "s": "Prunus spinosa", "f": "Rosaceae", "d": "7", "v": 1}, {"i": "2574130980", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/38569415/original.jpg", "s": "Knautia arvensis", "f": "Caprifoliaceae", "d": "5", "v": 1}, {"i": "5133928405", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/482546143/original.jpeg", "s": "Glechoma hederacea", "f": "Lamiaceae", "d": "4", "v": 1}, {"i": "5844361335", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/578134140/original.jpg", "s": "Leucanthemum vulgare", "f": "Asteraceae", "d": "10", "v": 1}, {"i": "5062595578", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/287282937/original.jpeg", "s": "Silene dichotoma", "f": "Caryophyllaceae", "d": "6", "v": 1}, {"i": "5104617091", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/478665953/original.jpeg", "s": "Lamium purpureum", "f": "Lamiaceae", "d": "3", "v": 1}, {"i": "2543034005", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/58625048/original.jpeg", "s": "Geranium robertianum", "f": "Geraniaceae", "d": "12", "v": 1}, {"i": "4413790616", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/317318579/original.jpg", "s": "Achillea millefolium", "f": "Asteraceae", "d": "9", "v": 1}, {"i": "4852765573", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/273260341/original.jpeg", "s": "Polygonatum multiflorum", "f": "Asparagaceae", "d": "4", "v": 1}, {"i": "2465192762", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/56627600/original.jpeg", "s": "Erigeron canadensis", "f": "Asteraceae", "d": "11", "v": 1}, {"i": "3061570681", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/115927017/original.jpg", "s": "Sedum acre", "f": "Crassulaceae", "d": "3", "v": 1}, {"i": "5140435967", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/491719946/original.jpg", "s": "Ilex aquifolium", "f": "Aquifoliaceae", "d": "4", "v": 1}, {"i": "4872149916", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/386497671/original.jpeg", "s": "Lamium galeobdolon", "f": "Lamiaceae", "d": "5", "v": 1}, {"i": "2634021769", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/73909758/original.jpeg", "s": "Viola arvensis", "f": "Violaceae", "d": "5", "v": 1}, {"i": "3874143559", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/216056283/original.jpeg", "s": "Solidago gigantea", "f": "Asteraceae", "d": "7", "v": 1}, {"i": "6251969084", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/647668612/original.jpg", "s": "Vicia hirsuta", "f": "Fabaceae", "d": "4", "v": 1}, {"i": "6413396492", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/681530610/original.jpg", "s": "Lilium martagon", "f": "Liliaceae", "d": "6", "v": 1}, {"i": "4405473482", "u": "https://inaturalist-open-data.s3.amazonaws.com/photos/313406264/original.jpeg", "s": "Impatiens parviflora", "f": "Balsaminaceae", "d": "8", "v": 1}];
+var A = {}, idx = 0, nDone = 0, nDone0 = 0, t0 = null, verDatos = false, avisoExport = 0;
+var LS = "anot_" + KIT;
+var $ = function(s){ return document.querySelector(s); };
+var tT;
+function toast(m){ var t = $("#toast"); t.textContent = m; t.classList.add("show");
+  clearTimeout(tT); tT = setTimeout(function(){ t.classList.remove("show"); }, 2200); }
+
+/* ---- fotos: pedir la version de 1024 px y caer a original si no existe ---- */
+function urlChica(u){ return u.replace(/\/original\./, "/large."); }
+
+/* ---- estado guardado ---- */
+try{
+  var sv = JSON.parse(localStorage.getItem(LS) || "{}");
+  if(sv && sv.A){ A = sv.A; idx = sv.idx || 0; verDatos = !!sv.verDatos; }
+}catch(e){ A = {}; }
+function contar(){ var n = 0; for(var k in A){ if(A[k] && A[k]._v) n++; } return n; }
+nDone = contar(); nDone0 = nDone;      /* solo confirmadas, no las tocadas sin confirmar */
+
+function save(){
+  try{ localStorage.setItem(LS, JSON.stringify({A:A, idx:idx, kit:KIT, verDatos:verDatos,
+       t:new Date().toISOString()})); }
+  catch(e){ toast("Storage full: download the CSV"); }
+}
+function rec(){ var id = D[idx].i; if(!A[id]) A[id] = {}; return A[id]; }
+function get(c){ var r = A[D[idx].i]; return !!(r && r[c]); }
+
+var chips = $("#chips");
+CLS.forEach(function(c){
+  var b = document.createElement("button");
+  b.className = "chip"; b.setAttribute("data-c", c);
+  b.innerHTML = NICE[c] + "<small>" + HINT[c] + "</small>";
+  b.addEventListener("click", function(){
+    var r = rec(); r[c] = r[c] ? 0 : 1;
+    if(r[c]) r.ne = 0;
+    paint(); if(navigator.vibrate) navigator.vibrate(8);
+  });
+  chips.appendChild(b);
+});
+
+function paint(){
+  CLS.forEach(function(c){
+    var el = document.querySelector('.chip[data-c="' + c + '"]');
+    if(el){ if(get(c)) el.classList.add("on"); else el.classList.remove("on"); }
+  });
+  var r = A[D[idx].i] || {};
+  if(r.ne) $("#noev").classList.add("on"); else $("#noev").classList.remove("on");
+  var any = CLS.some(get) || !!r.ne;
+  if(any){ $("#next").classList.remove("vacio"); $("#next").textContent = "Next"; }
+  else { $("#next").classList.add("vacio"); $("#next").textContent = "None"; }
+}
+function render(){
+  if(idx >= D.length){ fin(); return; }
+  $("#fin").style.display = "none"; $("#img").style.display = "block";
+  zoomReset();
+  var r = D[idx], im = $("#img");
+  $("#spin").style.display = "block";
+  im.onload = function(){ $("#spin").style.display = "none"; };
+  im.onerror = function(){ if(im.src !== r.u){ im.src = r.u; } else { $("#spin").style.display = "none"; toast("Photo did not load"); } };
+  im.src = urlChica(r.u);
+  $("#meta").innerHTML = verDatos
+    ? "<b>" + (r.s || "no species") + "</b> <i>" + (r.f || "") + "</i> <i>month " + (r.d || "?") + "</i>"
+    : "";
+  $("#cnt").textContent = (idx + 1) + "/" + D.length;
+  $("#bar").style.width = (100 * nDone / D.length).toFixed(1) + "%";
+  var hechasHoy = nDone - nDone0;
+  if(t0 && hechasHoy > 2){
+    var pm = hechasHoy / ((Date.now() - t0) / 60000);
+    var falta = (D.length - nDone) / Math.max(pm, 0.1);
+    $("#rate").textContent = pm.toFixed(0) + "/min · " + (falta < 60 ? Math.round(falta) + " min" : (falta / 60).toFixed(1) + " h");
+  }
+  paint();
+  for(var k = 1; k <= 2; k++){ if(D[idx + k]){ var p = new Image(); p.src = urlChica(D[idx + k].u); } }
+}
+function commit(confirmarVacia){
+  var r = rec();
+  var any = CLS.some(function(c){ return r[c]; }) || r.ne;
+  if(!any && confirmarVacia !== true){
+    toast('Mark a phenophase, or tap "None" to say none is visible');
+    return;
+  }
+  CLS.forEach(function(c){ if(!r[c]) r[c] = 0; });
+  if(!r.ne) r.ne = 0;
+  r.sk = 0;
+  if(!r._v){ r._v = 1; nDone++; }
+  if(!t0) t0 = Date.now();
+  save();
+  if(nDone - avisoExport >= 250){ avisoExport = nDone;
+    toast(nDone + " done. Download the CSV now in case the browser clears its data."); }
+  idx++; render();
+}
+function fin(){
+  $("#img").style.display = "none"; $("#spin").style.display = "none";
+  $("#fin").style.display = "flex";
+  var sk = 0; for(var k in A){ if(A[k] && A[k].sk) sk++; }
+  $("#fintxt").textContent = nDone + " of " + D.length + " annotated" + (sk ? ", " + sk + " marked as unsure" : "") + ".";
+}
+function csv(){
+  var h = ["gbif_id","species","family","month","doble_anotacion"].concat(CLS.map(function(c){ return "val_" + c; }));
+  h = h.concat(["no_evaluable","dudosa","annotator_notes","_validated","kit"]);
+  var out = [h.join(",")];
+  D.forEach(function(r){
+    var a = A[r.i] || {};
+    var row = [r.i, '"' + String(r.s || "").replace(/"/g, '""') + '"', r.f || "", r.d || "", r.v ? 1 : 0];
+    CLS.forEach(function(c){ row.push(a[c] ? 1 : 0); });
+    row.push(a.ne ? 1 : 0);
+    row.push(a.sk ? 1 : 0);
+    row.push('"' + String(a.n || "").replace(/"/g, '""') + '"');
+    row.push(a._v ? 1 : "");
+    row.push(KIT);
+    out.push(row.join(","));
+  });
+  return out.join("\n");
+}
+function bajar(){
+  var t = csv();
+  try{
+    var b = new Blob([t], {type:"text/csv"}), u = URL.createObjectURL(b), a = document.createElement("a");
+    a.href = u; a.download = KIT + "_anotado.csv"; document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); }, 1000);
+    toast("CSV downloaded");
+  }catch(e){ copiar(); }
+}
+function copiar(){
+  var t = csv();
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(t).then(function(){ toast("Copied to clipboard"); },
+      function(){ $("#saltxt").value = t; $("#sal").style.display = "flex"; });
+  } else { $("#saltxt").value = t; $("#sal").style.display = "flex"; }
+}
+
+/* ---- zoom y paneo: pinch con dos dedos, doble toque, arrastre cuando esta ampliada ---- */
+var z = 1, tx = 0, ty = 0, pinch0 = 0, z0 = 1, pan = null, lastTap = 0;
+function aplicar(){
+  var im = $("#img");
+  im.style.transform = "translate(" + tx + "px," + ty + "px) scale(" + z + ")";
+  var zl = $("#zl");
+  if(z > 1.02){ zl.style.display = "block"; zl.textContent = z.toFixed(1) + "x · double-tap to exit"; }
+  else zl.style.display = "none";
+}
+function zoomReset(){ z = 1; tx = 0; ty = 0; aplicar(); }
+function dist(t){ var a = t[0], b = t[1];
+  return Math.sqrt(Math.pow(a.clientX - b.clientX, 2) + Math.pow(a.clientY - b.clientY, 2)); }
+var stage = $("#stage"), sx = 0, sy = 0, st = 0;
+stage.addEventListener("touchstart", function(e){
+  if(e.touches.length === 2){ pinch0 = dist(e.touches); z0 = z; pan = null; }
+  else if(e.touches.length === 1){
+    var t = e.touches[0]; sx = t.clientX; sy = t.clientY; st = Date.now();
+    pan = (z > 1.02) ? {x:t.clientX, y:t.clientY, tx:tx, ty:ty} : null;
+  }
+}, {passive:true});
+stage.addEventListener("touchmove", function(e){
+  if(e.touches.length === 2 && pinch0){
+    z = Math.min(6, Math.max(1, z0 * dist(e.touches) / pinch0)); aplicar();
+    if(e.cancelable) e.preventDefault();
+  } else if(pan && e.touches.length === 1){
+    tx = pan.tx + (e.touches[0].clientX - pan.x);
+    ty = pan.ty + (e.touches[0].clientY - pan.y); aplicar();
+    if(e.cancelable) e.preventDefault();
+  }
+}, {passive:false});
+stage.addEventListener("touchend", function(e){
+  if(e.touches.length === 0) pinch0 = 0;
+  if(pan){ pan = null; return; }
+  if(z > 1.02) return;                                  /* ampliada: no navegar */
+  var t = e.changedTouches[0], dx = t.clientX - sx, dy = t.clientY - sy;
+  if(Date.now() - st < 600 && Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.6){
+    if(dx < 0){
+      var r = A[D[idx].i] || {};
+      var any = CLS.some(function(c){ return r[c]; }) || r.ne;
+      if(any) commit(); else toast("Nothing marked: use the button to confirm there is no phenophase");
+    } else if(idx > 0){ idx--; render(); }
+    return;
+  }
+  var now = Date.now();
+  if(now - lastTap < 300){ if(z > 1.02) zoomReset(); else { z = 2.5; aplicar(); } }
+  lastTap = now;
+}, {passive:true});
+
+$("#next").addEventListener("click", function(){
+  var r = A[D[idx].i] || {};
+  var any = CLS.some(function(c){ return r[c]; }) || r.ne;
+  commit(any ? undefined : true);        /* el boton dice "Ninguna": es explicito */
+});
+$("#atras").addEventListener("click", function(){ if(idx > 0){ idx--; render(); } });
+$("#skip").addEventListener("click", function(){
+  var r = rec(); r.sk = 1; save(); idx++; render(); toast("Marked as unsure");
+});
+$("#noev").addEventListener("click", function(){
+  var r = rec(); r.ne = r.ne ? 0 : 1;
+  if(r.ne) CLS.forEach(function(c){ r[c] = 0; });
+  paint();
+});
+$("#nota").addEventListener("click", function(){
+  var r = rec(); var v = prompt("Note:", r.n || "");
+  if(v !== null){ r.n = v; save(); toast("Note saved"); }
+});
+$("#menu").addEventListener("click", function(){
+  var o = prompt("1 = download CSV\n2 = copy to clipboard\n3 = go to a photo\n4 = " +
+                 (verDatos ? "hide" : "show") + " species and month\n5 = delete saved data", "1");
+  if(o === "1") bajar();
+  else if(o === "2") copiar();
+  else if(o === "3"){ var n = parseInt(prompt("Photo number (1-" + D.length + ")", "1"), 10);
+    if(n >= 1 && n <= D.length){ idx = n - 1; render(); } }
+  else if(o === "4"){ verDatos = !verDatos; save(); render();
+    toast(verDatos ? "Note: seeing the month can bias the label" : "Data hidden"); }
+  else if(o === "5"){ if(confirm("Delete the annotations saved on this device?")){
+    localStorage.removeItem(LS); A = {}; nDone = 0; nDone0 = 0; idx = 0; render(); toast("Deleted"); } }
+});
+$("#fdl").addEventListener("click", bajar);
+$("#fcopy").addEventListener("click", copiar);
+$("#salclose").addEventListener("click", function(){ $("#sal").style.display = "none"; });
+document.addEventListener("keydown", function(e){
+  var n = parseInt(e.key, 10);
+  if(n >= 1 && n <= CLS.length){ var r = rec(), c = CLS[n-1]; r[c] = r[c] ? 0 : 1; if(r[c]) r.ne = 0; paint(); }
+  else if(e.key === "Enter" || e.key === " "){ e.preventDefault(); $("#next").click(); }
+  else if(e.key === "ArrowLeft"){ if(idx > 0){ idx--; render(); } }
+  else if(e.key === "ArrowRight"){ $("#next").click(); }
+  else if(e.key === "x" || e.key === "X") $("#noev").click();
+  else if(e.key === "?") $("#skip").click();
+});
+window.addEventListener("beforeunload", save);
+document.addEventListener("visibilitychange", function(){ if(document.hidden) save(); });
+if(nDone > 0) toast("Restored " + nDone + " confirmed annotations");
+render();
+})();
+</script>
+</body>
+</html>
